@@ -51,21 +51,27 @@ async function transformToDeviceCanvas(
 	png: Buffer,
 	profile: DeviceProfile,
 ): Promise<Buffer> {
-	const image = sharp(png)
+	const resized = await sharp(png)
 		.flatten({ background: "#ffffff" })
-		.resize(profile.model.width, profile.model.height, { fit: "cover" });
+		.resize(profile.model.width, profile.model.height, { fit: "cover" })
+		.png()
+		.toBuffer();
 
-	const rotated =
-		profile.model.rotation === 0 ? image : image.rotate(profile.model.rotation);
+	if (profile.model.rotation === 0) {
+		return resized;
+	}
 
-	return rotated.png().toBuffer();
+	// Rotate in a separate pass: with sharp 0.34.5, chaining `.resize().rotate()`
+	// turned a 90° model (e.g. the Kindle Voyage, 1448x1072) into a square
+	// 1072x1072 instead of 1072x1448.
+	return sharp(resized).rotate(profile.model.rotation).png().toBuffer();
 }
 
 async function encode(
 	png: Buffer,
 	mimeType: string,
-	imageSizeLimit?: number,
-	options: { paletteColorCount?: number } = {},
+	imageSizeLimit?: number | null,
+	options: { paletteColorCount?: number; grayscale8?: boolean } = {},
 ): Promise<{ buffer: Buffer; sizeLimitExceeded: boolean }> {
 	if (mimeType === "image/bmp") {
 		const levels = bmpPaletteDepthFromTargetColorCount(
@@ -108,6 +114,28 @@ async function encode(
 				};
 			}
 		}
+	}
+
+	if (mimeType === "image/png" && options.grayscale8) {
+		// Plain 1-channel, 8-bit gray PNG (color type 0), no palette, not
+		// interlaced. Kindle's `eips -g` renders palette PNGs corrupted. The image
+		// is already snapped to 256 grays here, so any channel is the gray value.
+		const buffer = await sharp(png)
+			.removeAlpha()
+			.extractChannel(0)
+			.png({
+				compressionLevel: 9,
+				effort: 10,
+				palette: false,
+				progressive: false,
+			})
+			.toBuffer();
+		return {
+			buffer,
+			sizeLimitExceeded: Boolean(
+				imageSizeLimit && buffer.length > imageSizeLimit,
+			),
+		};
 	}
 
 	if (mimeType === "image/png") {
@@ -176,11 +204,19 @@ export async function renderDeviceImage({
 		quantized = transformed;
 	}
 
+	const grayscale8 =
+		paletteColorCount === 256 &&
+		Boolean(
+			target.targetPalette?.every(
+				(color) => color.r === color.g && color.g === color.b,
+			),
+		);
+
 	const { buffer, sizeLimitExceeded } = await encode(
 		quantized,
 		profile.model.mime_type,
 		profile.model.image_size_limit,
-		{ paletteColorCount },
+		{ paletteColorCount, grayscale8 },
 	);
 
 	return {

@@ -30,7 +30,9 @@ export const trmnlModelSchema = z.object({
 	kind: z.string().optional(),
 	palette_ids: z.array(z.string()),
 	preview_white_point: z.string().optional(),
-	image_size_limit: z.number().optional(),
+	// Upstream sends `null` for most models (49 of 61 at the time of writing), so
+	// this is `.nullish()` to keep them from being dropped by the registry.
+	image_size_limit: z.number().nullish(),
 	image_upload_supported: z.boolean().optional(),
 	// `css` is nullable in the upstream API.
 	css: z

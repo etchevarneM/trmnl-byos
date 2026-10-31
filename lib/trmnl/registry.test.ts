@@ -161,6 +161,27 @@ describe("TRMNL registry contracts", () => {
 		).toBe(true);
 	});
 
+	it("keeps models whose upstream image_size_limit is null", () => {
+		const parsed = trmnlModelSchema.safeParse({
+			name: "amazon_kindle_voyage",
+			label: "Amazon Kindle Voyage",
+			width: 1448,
+			height: 1072,
+			colors: 256,
+			bit_depth: 8,
+			scale_factor: 1.4008,
+			rotation: 90,
+			mime_type: "image/png",
+			offset_x: 0,
+			offset_y: 0,
+			palette_ids: ["gray-256"],
+			image_size_limit: null,
+		});
+
+		expect(parsed.success).toBe(true);
+		expect(parsed.success && parsed.data.image_size_limit).toBeNull();
+	});
+
 	it("drops malformed registry entries without dropping the valid ones", () => {
 		const warn = jest
 			.spyOn(console, "warn")
