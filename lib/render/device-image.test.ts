@@ -3,6 +3,10 @@ import sharp from "sharp";
 import type { DeviceProfile } from "@/lib/trmnl/types";
 import { renderDeviceImage } from "./device-image";
 
+// Rendering a full 1448x1072 canvas is slow on small machines (a Raspberry Pi
+// needs ~10-30 s), well past Jest's 5 s default.
+jest.setTimeout(120_000);
+
 const GRAY_256 = { id: "gray-256", name: "256 Grays (8-bit)", grays: 256 };
 
 function profileFor(
