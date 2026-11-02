@@ -1,37 +1,18 @@
-import type { IconName } from "./icons";
-
-export type DashboardData = {
-	/** Big icon, top-left. */
-	icon: IconName;
-	/** Decorative dial: previous, current (outdoor temperature) and next. */
-	dial: [number, number, number];
-	min: number;
-	max: number;
-	/** Three-letter month label, e.g. "OCT". */
-	month: string;
-	day: number;
-	/**
-	 * 12 bars, one per hour. `hour` is the label; `barPx` is the black bar
-	 * height in px (0..81, 81 = full track).
-	 */
-	rain: { hour: number; barPx: number }[];
-	/** 7 rows, in order. */
-	days: { label: string; min: number; max: number; icon: IconName }[];
-	/** 4 rooms, in order. Values are already formatted ("21º" or "—"). */
-	rooms: { name: string; temp: string }[];
-};
+import type { DashboardData } from "./types";
 
 /**
  * Fixed example data that reproduces the Figma frame 19:1312 ("dashboard v1").
  * Strings keep the Figma characters: the degree-like sign is U+00BA ("º").
+ * Used as a visual reference and as a test fixture; the live recipe renders
+ * the data from ./getData.ts.
  */
 export const SAMPLE_DATA: DashboardData = {
 	icon: "sun",
-	dial: [23, 24, 25],
-	min: 22,
-	max: 34,
+	dial: ["23", "24", "25"],
+	min: "22º",
+	max: "34º",
 	month: "OCT",
-	day: 29,
+	day: "29",
 	rain: [
 		{ hour: 7, barPx: 33 },
 		{ hour: 8, barPx: 8 },
@@ -47,13 +28,13 @@ export const SAMPLE_DATA: DashboardData = {
 		{ hour: 18, barPx: 13 },
 	],
 	days: [
-		{ label: "LUN", min: 22, max: 34, icon: "sun" },
-		{ label: "MAR", min: 22, max: 34, icon: "sun" },
-		{ label: "MIE", min: 22, max: 34, icon: "sun" },
-		{ label: "JUE", min: 22, max: 34, icon: "sun" },
-		{ label: "VIE", min: 22, max: 34, icon: "sun" },
-		{ label: "SAB", min: 22, max: 34, icon: "sun" },
-		{ label: "DOM", min: 22, max: 34, icon: "sun" },
+		{ label: "LUN", temps: "22º/34º", icon: "sun" },
+		{ label: "MAR", temps: "22º/34º", icon: "sun" },
+		{ label: "MIE", temps: "22º/34º", icon: "sun" },
+		{ label: "JUE", temps: "22º/34º", icon: "sun" },
+		{ label: "VIE", temps: "22º/34º", icon: "sun" },
+		{ label: "SAB", temps: "22º/34º", icon: "sun" },
+		{ label: "DOM", temps: "22º/34º", icon: "sun" },
 	],
 	rooms: [
 		{ name: "Sala", temp: "21º" },

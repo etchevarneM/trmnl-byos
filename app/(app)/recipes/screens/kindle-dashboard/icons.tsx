@@ -5,19 +5,9 @@
 //
 // Takumi needs explicit pixel sizes on <svg> (percent sizes render nothing).
 
-export const ICON_NAMES = [
-	"sun",
-	"cloud-sun",
-	"cloud",
-	"cloud-fog",
-	"cloud-rain",
-	"cloud-lightning",
-	"snowflake",
-	"moon",
-	"cloud-moon",
-] as const;
+import type { IconName } from "./icon-names";
 
-export type IconName = (typeof ICON_NAMES)[number];
+export type { IconName } from "./icon-names";
 
 const MEDIUM_PATHS: Record<IconName, string> = {
 	sun: "M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z",
@@ -58,7 +48,8 @@ const THIN_PATHS: Record<IconName, string> = {
 };
 
 /** Small icon: the Figma 52x52 frame is the medium SVG at 52/256, no crop. */
-export function SmallIcon({ name }: { name: IconName }) {
+export function SmallIcon({ name }: { name: IconName | null }) {
+	if (!name) return <div style={{ display: "flex", width: 52, height: 52 }} />;
 	return (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
@@ -81,7 +72,11 @@ export function SmallIcon({ name }: { name: IconName }) {
  * ASSUMPTION: the same crop box is used for the other eight thin icons (the
  * Figma mockup only has the sun).
  */
-export function BigIcon({ name }: { name: IconName }) {
+export function BigIcon({ name }: { name: IconName | null }) {
+	if (!name)
+		return (
+			<div style={{ display: "flex", width: 226.5625, height: 226.5625 }} />
+		);
 	return (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"

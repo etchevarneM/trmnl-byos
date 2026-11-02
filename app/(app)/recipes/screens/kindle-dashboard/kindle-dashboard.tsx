@@ -2,15 +2,17 @@ import type { CSSProperties, ReactNode } from "react";
 import { z } from "zod";
 import type { RecipeDefinition } from "@/lib/recipes/types";
 import type { ScreenProfile } from "@/lib/trmnl/screen-profile";
+import { getData } from "./getData";
 import { BigIcon, SmallIcon } from "./icons";
-import { type DashboardData, SAMPLE_DATA } from "./sample-data";
+import { type DashboardData, dataSchema } from "./types";
 
 /**
  * "dashboard v1" for the Kindle Voyage, 1:1 with Figma frame 19:1312
  * (file p79jARoiQsLSkMyR499fKV). The Figma frame is the full landscape page of
  * 1448x1072 physical pixels, so every number below is a physical pixel.
  *
- * For now the screen renders fixed sample data (see ./sample-data.ts).
+ * Data comes from ./getData.ts (Open-Meteo + Home Assistant). ./sample-data.ts
+ * holds the fixed values that reproduce the Figma mockup.
  */
 
 const DESIGN_WIDTH = 1448;
@@ -18,7 +20,7 @@ const DESIGN_HEIGHT = 1072;
 const FONT = "Reddit Mono";
 
 export const paramsSchema = z.object({});
-export const dataSchema = paramsSchema;
+export { dataSchema };
 
 const col = (style: CSSProperties = {}): CSSProperties => ({
 	display: "flex",
@@ -166,9 +168,17 @@ function DayRow({
 				{day.label}
 			</div>
 			<div style={row({ alignItems: "center", gap: 12 })}>
+				{/* Figma: fixed 126 px box with the text centred in it, so a shorter
+				    value ("9º/17º") stays centred instead of hugging the icon. */}
 				<div
-					style={text(32, 500, 42, { marginTop: 1 })}
-				>{`${day.min}º/${day.max}º`}</div>
+					style={text(32, 500, 42, {
+						marginTop: 1,
+						width: 126,
+						justifyContent: "center",
+					})}
+				>
+					{day.temps}
+				</div>
 				<SmallIcon name={day.icon} />
 			</div>
 		</div>
@@ -238,9 +248,9 @@ function Dashboard({ data }: { data: DashboardData }): ReactNode {
 							gap: 23,
 						})}
 					>
-						{data.dial.map((n) => (
+						{data.dial.map((n, i) => (
 							<div
-								key={n}
+								key={`dial-${i}`}
 								style={row({
 									width: 271,
 									height: 182,
@@ -249,7 +259,7 @@ function Dashboard({ data }: { data: DashboardData }): ReactNode {
 									justifyContent: "center",
 								})}
 							>
-								<div style={text(240.222, 300, 181.492)}>{String(n)}</div>
+								<div style={text(240.222, 300, 181.492)}>{n}</div>
 							</div>
 						))}
 					</div>
@@ -270,11 +280,11 @@ function Dashboard({ data }: { data: DashboardData }): ReactNode {
 					>
 						<div style={row({ alignItems: "center", gap: 14 })}>
 							<Arrow />
-							<div style={text(81.067, 300, 105)}>{`${data.min}º`}</div>
+							<div style={text(81.067, 300, 105)}>{data.min}</div>
 						</div>
 						<div style={row({ alignItems: "center", gap: 14 })}>
 							<Arrow up />
-							<div style={text(81.067, 300, 105)}>{`${data.max}º`}</div>
+							<div style={text(81.067, 300, 105)}>{data.max}</div>
 						</div>
 					</div>
 					<div
@@ -287,12 +297,12 @@ function Dashboard({ data }: { data: DashboardData }): ReactNode {
 							backgroundColor: "#dddddd",
 						})}
 					>
-						<div style={col({ width: 185 })}>
+						<div style={col({ alignItems: "flex-start" })}>
 							<div style={text(36, 400, 45, { marginTop: 1 })}>
 								{data.month}
 							</div>
 							<div style={text(164.4, 300, 169, { marginBottom: -1 })}>
-								{String(data.day)}
+								{data.day}
 							</div>
 						</div>
 					</div>
@@ -367,12 +377,12 @@ export default function KindleDashboard({
 	width = DESIGN_WIDTH,
 	height = DESIGN_HEIGHT,
 	screen,
-	data = SAMPLE_DATA,
+	data,
 }: {
 	width?: number;
 	height?: number;
 	screen?: ScreenProfile;
-	data?: DashboardData;
+	data: DashboardData;
 }) {
 	// The rasterizer stretches the logical canvas (width x height) to the
 	// physical image. For the Voyage the logical canvas is smaller than
@@ -414,19 +424,28 @@ export default function KindleDashboard({
 	);
 }
 
-export const definition: RecipeDefinition<typeof paramsSchema> = {
+export const definition: RecipeDefinition<
+	typeof paramsSchema,
+	typeof dataSchema
+> = {
 	meta: {
 		slug: "kindle-dashboard",
 		title: "Kindle dashboard",
 		description:
-			"Home dashboard for the Kindle Voyage (weather, rain, 7 days, rooms). Fixed example data for now.",
+			"Home dashboard for the Kindle Voyage: weather (Open-Meteo), rain, 7 days and room temperatures (Home Assistant).",
 		published: true,
 		category: "display-components",
-		version: "0.1.0",
+		version: "0.2.0",
 	},
 	paramsSchema,
 	dataSchema,
-	Component: ({ width, height, screen }) => (
-		<KindleDashboard width={width} height={height} screen={screen} />
+	getData: () => getData(),
+	Component: ({ width, height, screen, data }) => (
+		<KindleDashboard
+			width={width}
+			height={height}
+			screen={screen}
+			data={data}
+		/>
 	),
 };
