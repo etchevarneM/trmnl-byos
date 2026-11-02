@@ -9,6 +9,7 @@ import {
 	parseHaState,
 	rainBarPx,
 	resetWeatherCache,
+	WEATHER_STALE_MAX_MS,
 	WEATHER_TTL_MS,
 	type Weather,
 } from "./getData";
@@ -325,6 +326,30 @@ describe("fetchWeather", () => {
 		// A later success is not blocked by the earlier failures.
 		const good = jest.fn(async () => okResponse());
 		expect(await fetchWeather(good as never, 6)).not.toBeNull();
+	});
+
+	it("reuses the last good forecast when a refresh fails, up to 6 hours", async () => {
+		const good = jest.fn(async () => okResponse());
+		const failing = jest.fn(async () => {
+			throw new Error("The operation was aborted due to timeout");
+		});
+		const t0 = 1_000_000;
+		const first = await fetchWeather(good as never, t0);
+		expect(first).not.toBeNull();
+		// TTL expired, refresh fails -> the old forecast, not null.
+		expect(await fetchWeather(failing as never, t0 + WEATHER_TTL_MS)).toBe(
+			first,
+		);
+		expect(failing).toHaveBeenCalledTimes(1);
+		// It retries on the next call instead of caching the failure.
+		expect(await fetchWeather(failing as never, t0 + WEATHER_TTL_MS + 1)).toBe(
+			first,
+		);
+		expect(failing).toHaveBeenCalledTimes(2);
+		// Too old: back to null.
+		expect(
+			await fetchWeather(failing as never, t0 + WEATHER_STALE_MAX_MS),
+		).toBeNull();
 	});
 });
 

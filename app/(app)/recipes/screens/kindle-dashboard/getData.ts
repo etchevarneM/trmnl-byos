@@ -21,6 +21,8 @@ const LONGITUDE = -58.3816;
 
 export const FETCH_TIMEOUT_MS = 5_000;
 export const WEATHER_TTL_MS = 12 * 60 * 1000;
+/** If Open-Meteo fails, the last good forecast is reused for up to this long. */
+export const WEATHER_STALE_MAX_MS = 6 * 60 * 60 * 1000;
 export const RAIN_TRACK_PX = 81;
 
 const MONTHS = [
@@ -167,7 +169,12 @@ export function weatherUrl(): string {
 	return `https://api.open-meteo.com/v1/forecast?${query.toString()}`;
 }
 
-/** Open-Meteo forecast, cached for 12 minutes. Returns null on any failure. */
+/**
+ * Open-Meteo forecast, cached for 12 minutes. On a failure it falls back to
+ * the last good forecast (up to 6 h old, a forecast moves slowly) so one slow
+ * request does not blank the whole column; with nothing to fall back on it
+ * returns null.
+ */
 export async function fetchWeather(
 	fetchFn: FetchFn = fetch,
 	nowMs: number = Date.now(),
@@ -185,10 +192,14 @@ export async function fetchWeather(
 		weatherCache = { fetchedAt: nowMs, data };
 		return data;
 	} catch (error) {
-		console.warn(
-			"[kindle-dashboard] Open-Meteo failed:",
-			error instanceof Error ? error.message : String(error),
-		);
+		const reason = error instanceof Error ? error.message : String(error);
+		if (weatherCache && nowMs - weatherCache.fetchedAt < WEATHER_STALE_MAX_MS) {
+			console.warn(
+				`[kindle-dashboard] Open-Meteo failed (${reason}); using the forecast from ${Math.round((nowMs - weatherCache.fetchedAt) / 60000)} min ago`,
+			);
+			return weatherCache.data;
+		}
+		console.warn("[kindle-dashboard] Open-Meteo failed:", reason);
 		return null;
 	}
 }
