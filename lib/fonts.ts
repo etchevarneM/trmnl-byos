@@ -8,6 +8,48 @@ const fontPaths = {
 	blockKie: path.join(process.cwd(), "public", "fonts", "BlockKie.ttf"),
 	geneva9: path.join(process.cwd(), "public", "fonts", "geneva-9.ttf"),
 	inter: path.join(process.cwd(), "public", "fonts", "Inter_18pt-Regular.ttf"),
+	// Reddit Mono (SIL OFL 1.1): static instances cut from the Google Fonts
+	// variable font with fontTools (wght 300/400/500/600). Used by the Kindle
+	// dashboard recipe; see public/fonts/RedditMono-OFL.txt.
+	redditMonoLight: path.join(
+		process.cwd(),
+		"public",
+		"fonts",
+		"RedditMono-Light.ttf",
+	),
+	redditMonoRegular: path.join(
+		process.cwd(),
+		"public",
+		"fonts",
+		"RedditMono-Regular.ttf",
+	),
+	redditMonoMedium: path.join(
+		process.cwd(),
+		"public",
+		"fonts",
+		"RedditMono-Medium.ttf",
+	),
+	redditMonoSemiBold: path.join(
+		process.cwd(),
+		"public",
+		"fonts",
+		"RedditMono-SemiBold.ttf",
+	),
+};
+
+// Fonts that share one family name across several weights. Anything not
+// listed here is registered under its key at weight 400.
+const fontFamilyMeta: Record<
+	string,
+	{
+		family: string;
+		weight: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
+	}
+> = {
+	redditMonoLight: { family: "Reddit Mono", weight: 300 },
+	redditMonoRegular: { family: "Reddit Mono", weight: 400 },
+	redditMonoMedium: { family: "Reddit Mono", weight: 500 },
+	redditMonoSemiBold: { family: "Reddit Mono", weight: 600 },
 };
 
 // System fonts configuration
@@ -104,10 +146,12 @@ export const getTakumiFonts = () => {
 		}
 		data = Uint8Array.from(fontBuffer).buffer;
 
+		const meta = fontFamilyMeta[fontName];
+
 		return {
-			name: fontName,
+			name: meta?.family ?? fontName,
 			data: data,
-			weight: weight,
+			weight: meta?.weight ?? weight,
 			style: style,
 		};
 	});

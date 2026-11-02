@@ -11,6 +11,8 @@ export const reactRecipeLoaders: Record<string, RecipeModuleLoader> = {
 	calendar: () => import("../../app/(app)/recipes/screens/calendar/calendar"),
 	"hacker-news": () =>
 		import("../../app/(app)/recipes/screens/hacker-news/hacker-news"),
+	"kindle-dashboard": () =>
+		import("../../app/(app)/recipes/screens/kindle-dashboard/kindle-dashboard"),
 	"local-news": () =>
 		import("../../app/(app)/recipes/screens/local-news/local-news"),
 	"not-found": () =>
@@ -32,6 +34,7 @@ export const reactRecipeSlugs = [
 	"bitmap-patterns",
 	"calendar",
 	"hacker-news",
+	"kindle-dashboard",
 	"local-news",
 	"not-found",
 	"responsive-example",
