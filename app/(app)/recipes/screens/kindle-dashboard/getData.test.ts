@@ -141,34 +141,34 @@ describe("buildDashboardData", () => {
 			{ name: "Manu", temp: "23º" },
 			{ name: "Matías", temp: "24º" },
 		]);
-		// 7 consecutive days starting today (Thursday), accents-free labels.
+		// 7 consecutive days starting tomorrow (Friday), accents-free labels.
 		expect(data.days.map((d) => d.label)).toEqual([
-			"JUE",
 			"VIE",
 			"SAB",
 			"DOM",
 			"LUN",
 			"MAR",
 			"MIE",
+			"JUE",
 		]);
 		expect(data.days[0]).toEqual({
-			label: "JUE",
-			temps: "22º/34º",
-			icon: "sun",
+			label: "VIE",
+			temps: "20º/30º",
+			icon: "cloud",
 		});
-		expect(data.days[3]).toEqual({
+		expect(data.days[2]).toEqual({
 			label: "DOM",
 			temps: "0º/2º",
 			icon: "snowflake",
 		});
 		expect(data.days.map((d) => d.icon)).toEqual([
-			"sun",
 			"cloud",
 			"cloud-rain",
 			"snowflake",
 			"cloud-lightning",
 			"cloud-fog",
 			"cloud-sun",
+			"sun",
 		]);
 	});
 
@@ -220,13 +220,13 @@ describe("buildDashboardData", () => {
 		expect(data.rain).toHaveLength(12);
 		expect(data.days).toHaveLength(7);
 		expect(data.days.map((d) => d.label)).toEqual([
-			"JUE",
 			"VIE",
 			"SAB",
 			"DOM",
 			"LUN",
 			"MAR",
 			"MIE",
+			"JUE",
 		]);
 		expect(data.days.every((d) => d.temps === "—" && d.icon === null)).toBe(
 			true,

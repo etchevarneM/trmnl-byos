@@ -258,14 +258,15 @@ export function buildDashboardData({
 			? ["", MISSING, ""]
 			: [String(centre - 1), String(centre), String(centre + 1)];
 
-	// Daily rows: 7 consecutive days starting today. The labels come from the
-	// calendar, so they are right even if the forecast failed.
+	// Daily rows: 7 consecutive days starting tomorrow (today is already shown
+	// in the min/max block). The labels come from the calendar, so they are
+	// right even if the forecast failed. `forecast_days=8` covers today + 7.
 	const dailyStart = weather
 		? Math.max(0, weather.daily.time.indexOf(clock.date))
 		: 0;
 	const days = Array.from({ length: 7 }, (_, i) => {
-		const date = addDays(clock.date, i);
-		const idx = dailyStart + i;
+		const date = addDays(clock.date, i + 1);
+		const idx = dailyStart + i + 1;
 		const min = weather?.daily.temperature_2m_min[idx];
 		const max = weather?.daily.temperature_2m_max[idx];
 		const code = weather?.daily.weather_code[idx];
