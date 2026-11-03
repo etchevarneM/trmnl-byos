@@ -173,6 +173,31 @@ describe("buildDashboardData", () => {
 		]);
 	});
 
+	it("takes the big icon from the current hour's forecast when it has rain but 'current' says overcast", () => {
+		const weather = makeWeather();
+		weather.current.weather_code = 3;
+		weather.hourly.weather_code = weather.hourly.time.map((time) =>
+			time === "2026-10-29T12:00" ? 80 : 3,
+		);
+		const data = buildDashboardData({
+			weather,
+			outdoor: 20,
+			rooms: [null, null, null, null],
+			now: NOW,
+		});
+		expect(data.icon).toBe("cloud-rain");
+		// Without the hourly codes it falls back to the "current" one.
+		weather.hourly.weather_code = undefined;
+		expect(
+			buildDashboardData({
+				weather,
+				outdoor: 20,
+				rooms: [null, null, null, null],
+				now: NOW,
+			}).icon,
+		).toBe("cloud");
+	});
+
 	it("starts the 12 rain bars at the current hour and wraps past midnight", () => {
 		const data = buildDashboardData({
 			weather: makeWeather(),

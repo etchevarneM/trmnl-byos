@@ -145,6 +145,7 @@ const weatherSchema = z.object({
 	hourly: z.object({
 		time: z.array(z.string()),
 		precipitation_probability: z.array(z.number().nullable()),
+		weather_code: z.array(z.number().nullable()).optional(),
 	}),
 });
 
@@ -163,7 +164,7 @@ export function weatherUrl(): string {
 		timezone: TIMEZONE,
 		current: "weather_code,is_day",
 		daily: "weather_code,temperature_2m_max,temperature_2m_min",
-		hourly: "precipitation_probability",
+		hourly: "precipitation_probability,weather_code",
 		forecast_days: "8",
 	});
 	return `https://api.open-meteo.com/v1/forecast?${query.toString()}`;
@@ -305,7 +306,15 @@ export function buildDashboardData({
 
 	return {
 		icon: weather
-			? iconForCode(weather.current.weather_code, weather.current.is_day === 1)
+			? iconForCode(
+					// The model's "current" block can say overcast while the same
+					// hour's forecast already has rain (and the rain chart shows
+					// it), so the hour's code wins; "current" is the fallback.
+					(hourlyStart >= 0
+						? weather.hourly.weather_code?.[hourlyStart]
+						: null) ?? weather.current.weather_code,
+					weather.current.is_day === 1,
+				)
 			: null,
 		dial,
 		min: formatTemp(weather?.daily.temperature_2m_min[dailyStart]),
